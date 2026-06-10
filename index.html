@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tabela do IR | SuporteADV</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #0d0d0d; color: #e0e0e0; padding: 24px 16px; }
+  .container { max-width: 750px; margin: 0 auto; }
+
+  .header { text-align: center; margin-bottom: 28px; padding-bottom: 20px; border-bottom: 1px solid #222; }
+  h1 { font-size: 1.5rem; color: #008080; margin-bottom: 6px; }
+  .subtitle { font-size: 0.88rem; color: #888; line-height: 1.5; }
+  .brand { font-size: 0.78rem; margin-top: 8px; color: #555; }
+  .brand span.s { color: #8B00FF; font-weight: 700; }
+  .brand span.a { color: #008080; font-weight: 700; }
+
+  .card { background: #111; border-radius: 10px; border: 1px solid #222; border-left: 3px solid #8B00FF; padding: 20px 22px; margin-bottom: 14px; transition: border-left-color 0.2s; }
+  .card:hover { border-left-color: #008080; }
+  .card-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: #008080; font-weight: 700; margin-bottom: 16px; }
+
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px; }
+  @media (max-width: 520px) { .form-grid { grid-template-columns: 1fr; } }
+  .field.full { grid-column: 1 / -1; }
+
+  .field label { display: block; font-size: 0.78rem; color: #888; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .field input, .field select {
+    width: 100%; padding: 9px 11px; border: 1.5px solid #333; border-radius: 6px;
+    font-size: 0.95rem; color: #fff; background: #1a1a1a; transition: border-color 0.2s;
+  }
+  .field input:focus, .field select:focus { outline: none; border-color: #008080; box-shadow: 0 0 0 2px rgba(0,128,128,0.2); }
+  .field select option { background: #1a1a1a; }
+
+  .info-box { background: #0d1a1a; border: 1px solid #1a3a3a; border-radius: 8px; padding: 12px 14px; margin-bottom: 14px; font-size: 0.82rem; color: #666; line-height: 1.6; }
+  .info-box b { color: #008080; }
+
+  button.calcular { background: #008080; color: #fff; border: none; padding: 10px 26px; border-radius: 6px; font-size: 0.82rem; font-weight: 700; letter-spacing: 0.07em; cursor: pointer; transition: background 0.18s; text-transform: uppercase; }
+  button.calcular:hover { background: #006666; box-shadow: 0 0 10px rgba(0,128,128,0.4); }
+
+  /* Resultado */
+  .resultado { background: #0a1a0a; border: 1px solid #1a4a1a; border-radius: 10px; padding: 20px 22px; margin-top: 14px; display: none; }
+  .resultado.visible { display: block; }
+  .resultado-titulo { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: #008080; font-weight: 700; margin-bottom: 16px; }
+
+  .res-principal { text-align: center; margin-bottom: 20px; }
+  .res-principal label { display: block; font-size: 0.72rem; color: #555; text-transform: uppercase; margin-bottom: 6px; }
+  .res-principal .v { font-size: 1.8rem; font-weight: 700; color: #00ff00; font-family: 'Courier New', monospace; }
+  .res-principal .sub { font-size: 0.82rem; color: #555; margin-top: 4px; }
+
+  .res-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 16px; }
+  @media (max-width: 560px) { .res-grid { grid-template-columns: 1fr 1fr; } }
+  .res-item label { display: block; font-size: 0.68rem; color: #555; text-transform: uppercase; margin-bottom: 3px; }
+  .res-item .valor { font-size: 0.9rem; font-weight: 700; color: #ccc; font-family: 'Courier New', monospace; }
+  .res-item .valor.teal { color: #008080; }
+  .res-item .valor.verde { color: #00ff00; }
+  .res-item .valor.sec { color: #555; font-size: 0.85rem; }
+
+  .divider { border: none; border-top: 1px solid #1a3a1a; margin: 14px 0; }
+
+  /* Faixas progressivas */
+  .faixas-ir { display: flex; flex-direction: column; gap: 5px; margin-bottom: 16px; }
+  .faixa-ir { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: #111; border-radius: 8px; border-left: 3px solid #333; transition: border-left-color 0.2s; }
+  .faixa-ir.ativa { border-left-color: #008080; background: #0a1a0a; }
+  .faixa-ir.isento { border-left-color: #00ff00; background: #0a1a0a; }
+  .faixa-ir .fi-aliq { width: 44px; text-align: center; font-size: 1rem; font-weight: 700; font-family: 'Courier New', monospace; color: #555; flex-shrink: 0; }
+  .faixa-ir.ativa .fi-aliq { color: #008080; }
+  .faixa-ir.isento .fi-aliq { color: #00ff00; }
+  .faixa-ir .fi-info { flex: 1; }
+  .faixa-ir .fi-faixa { font-size: 0.82rem; color: #888; }
+  .faixa-ir.ativa .fi-faixa { color: #ccc; }
+  .faixa-ir .fi-deducao { font-size: 0.72rem; color: #444; margin-top: 2px; }
+  .faixa-ir .fi-ir { font-family: 'Courier New', monospace; font-weight: 700; font-size: 0.9rem; color: #444; }
+  .faixa-ir.ativa .fi-ir { color: #008080; }
+
+  /* Barra visual */
+  .barra-salario { margin-bottom: 16px; }
+  .barra-salario label { display: block; font-size: 0.72rem; color: #555; text-transform: uppercase; margin-bottom: 6px; }
+  .barra-bg { background: #1a1a1a; border-radius: 6px; height: 24px; overflow: hidden; display: flex; }
+  .barra-seg { height: 100%; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 700; color: #fff; transition: width 0.5s; white-space: nowrap; overflow: hidden; }
+  .barra-isento { background: #1a3a1a; }
+  .barra-75 { background: #006060; }
+  .barra-15 { background: #008080; }
+  .barra-225 { background: #005a5a; }
+  .barra-275 { background: #004a4a; }
+  .barra-legend { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
+  .bl-item { display: flex; align-items: center; gap: 4px; font-size: 0.68rem; color: #555; }
+  .bl-dot { width: 10px; height: 10px; border-radius: 3px; }
+
+  .comp-lista { display: flex; flex-direction: column; gap: 5px; margin-bottom: 16px; }
+  .comp-item { display: flex; justify-content: space-between; padding: 9px 14px; background: #111; border-radius: 7px; border-left: 3px solid #333; }
+  .comp-item.teal { border-left-color: #008080; }
+  .comp-item.vermelho { border-left-color: #ff4444; }
+  .comp-item.total { background: #0d1a0d; border-left-color: #00ff00; }
+  .comp-item .ci-nome { font-size: 0.82rem; color: #888; }
+  .comp-item .ci-valor { font-size: 0.9rem; font-weight: 700; font-family: 'Courier New', monospace; color: #008080; }
+  .comp-item.total .ci-nome { color: #fff; font-weight: 700; }
+  .comp-item.total .ci-valor { color: #00ff00; font-size: 1rem; }
+  .comp-item.vermelho .ci-valor { color: #ff4444; }
+
+  /* Tabela histórica */
+  .hist-wrap { margin-top: 14px; overflow-x: auto; }
+  .hist-wrap summary { cursor: pointer; color: #555; font-size: 0.78rem; margin-bottom: 8px; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.82rem; min-width: 500px; }
+  th { text-align: left; color: #555; padding: 6px 8px; border-bottom: 1px solid #222; font-size: 0.72rem; text-transform: uppercase; }
+  td { color: #999; padding: 6px 8px; border-bottom: 1px solid #1a1a1a; }
+  tr:hover td { background: #151515; }
+  td.dest { color: #00ff00; font-weight: 700; font-family: 'Courier New', monospace; }
+  tr.atual td { background: #0a1a0a; color: #fff; }
+
+  .erro { background: #1a0a0a; border: 1px solid #4a1a1a; border-radius: 8px; padding: 14px 16px; color: #ff6666; font-size: 0.88rem; margin-top: 14px; display: none; }
+  .erro.visible { display: block; }
+  .aviso { font-size: 0.72rem; color: #444; margin-top: 12px; line-height: 1.5; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <h1>Tabela do Imposto de Renda</h1>
+    <p class="subtitle">Calcule o IRPF mensal com deduções de dependentes, INSS e pensão alimentícia. Tabela progressiva 2025.</p>
+    <p class="brand"><span class="s">suporte</span><span class="a">ADV</span>.br — Ferramentas para Advogados</p>
+  </div>
+
+  <div class="card">
+    <div class="info-box">
+      <b>Tabela progressiva 2025:</b> Isenção até R$ 2.259,20 | 7,5% de R$ 2.259,21 a R$ 2.826,65 | 15% de R$ 2.826,66 a R$ 3.751,05 | 22,5% de R$ 3.751,06 a R$ 4.664,68 | 27,5% acima de R$ 4.664,68. Dedução por dependente: R$ 189,59/mês.
+    </div>
+
+    <div class="card-label">Dados para Cálculo</div>
+    <div class="form-grid">
+      <div class="field">
+        <label>Rendimento bruto mensal (R$)</label>
+        <input type="number" id="rendimento" placeholder="Ex: 8000,00" step="0.01" min="0">
+      </div>
+      <div class="field">
+        <label>INSS a deduzir (R$)</label>
+        <input type="number" id="inss" placeholder="Ex: 713,10" step="0.01" min="0" value="0">
+      </div>
+      <div class="field">
+        <label>Número de dependentes</label>
+        <input type="number" id="dependentes" value="0" min="0" max="20">
+      </div>
+      <div class="field">
+        <label>Pensão alimentícia (R$)</label>
+        <input type="number" id="pensao" value="0" step="0.01" min="0">
+      </div>
+      <div class="field">
+        <label>Outras deduções legais (R$)</label>
+        <input type="number" id="outrasDeducoes" value="0" step="0.01" min="0" placeholder="Previdência privada etc.">
+      </div>
+      <div class="field">
+        <label>Tipo de cálculo</label>
+        <select id="tipocalculo">
+          <option value="mensal">Mensal (fonte pagadora)</option>
+          <option value="anual">Anual (ajuste — ÷ 12)</option>
+          <option value="carneleao">Carnê-leão (autônomo)</option>
+        </select>
+      </div>
+    </div>
+    <button class="calcular" onclick="calcular()">CALCULAR</button>
+  </div>
+
+  <div class="erro" id="erro"></div>
+
+  <div class="resultado" id="resultado">
+    <div class="resultado-titulo" id="res-titulo">IRPF — Resultado</div>
+
+    <div class="res-principal">
+      <label>💰 IRPF a reter / recolher</label>
+      <div class="v" id="res-ir">—</div>
+      <div class="sub" id="res-sub">—</div>
+    </div>
+
+    <!-- Barra visual -->
+    <div class="barra-salario">
+      <label>Composição do rendimento</label>
+      <div class="barra-bg" id="barra-bg"></div>
+      <div class="barra-legend">
+        <div class="bl-item"><div class="bl-dot barra-isento"></div>Isento</div>
+        <div class="bl-item"><div class="bl-dot barra-75" style="background:#006060"></div>7,5%</div>
+        <div class="bl-item"><div class="bl-dot barra-15"></div>15%</div>
+        <div class="bl-item"><div class="bl-dot barra-225"></div>22,5%</div>
+        <div class="bl-item"><div class="bl-dot barra-275"></div>27,5%</div>
+      </div>
+    </div>
+
+    <div class="res-grid">
+      <div class="res-item"><label>Base de cálculo</label><div class="valor teal" id="res-base">—</div></div>
+      <div class="res-item"><label>Alíquota efetiva</label><div class="valor" id="res-aliq">—</div></div>
+      <div class="res-item"><label>Total deduções</label><div class="valor sec" id="res-deducoes">—</div></div>
+      <div class="res-item"><label>Líquido final</label><div class="valor verde" id="res-liquido">—</div></div>
+    </div>
+
+    <hr class="divider">
+    <div class="resultado-titulo">Cálculo por Faixas</div>
+    <div class="faixas-ir" id="faixas-ir"></div>
+
+    <hr class="divider">
+    <div class="resultado-titulo">Composição</div>
+    <div class="comp-lista" id="comp-lista"></div>
+
+    <details class="hist-wrap">
+      <summary>Ver tabela progressiva completa 2025</summary>
+      <table>
+        <thead><tr><th>Faixa de rendimento</th><th>Alíquota</th><th>Parcela a deduzir</th></tr></thead>
+        <tbody>
+          <tr><td>Até R$ 2.259,20</td><td class="dest">Isento</td><td>—</td></tr>
+          <tr><td>R$ 2.259,21 a R$ 2.826,65</td><td class="dest">7,5%</td><td>R$ 169,44</td></tr>
+          <tr><td>R$ 2.826,66 a R$ 3.751,05</td><td class="dest">15%</td><td>R$ 381,44</td></tr>
+          <tr><td>R$ 3.751,06 a R$ 4.664,68</td><td class="dest">22,5%</td><td>R$ 662,77</td></tr>
+          <tr><td>Acima de R$ 4.664,68</td><td class="dest">27,5%</td><td>R$ 896,00</td></tr>
+        </tbody>
+      </table>
+    </details>
+
+    <p class="aviso">⚠️ Tabela vigente para 2025. O cálculo utiliza o método da parcela a deduzir (alíquota nominal × base − parcela de dedução). Deduções permitidas: INSS, dependentes (R$ 189,59 cada), pensão alimentícia judicial, contribuição previdenciária complementar. Consulte a Receita Federal para valores atualizados.</p>
+  </div>
+
+</div>
+
+<script>
+// Tabela progressiva 2025
+const faixas2025 = [
+  { limite: 2259.20, aliq: 0,     pd: 0,      nome: 'Isento' },
+  { limite: 2826.65, aliq: 0.075, pd: 169.44, nome: '7,5%' },
+  { limite: 3751.05, aliq: 0.15,  pd: 381.44, nome: '15%' },
+  { limite: 4664.68, aliq: 0.225, pd: 662.77, nome: '22,5%' },
+  { limite: Infinity,aliq: 0.275, pd: 896.00, nome: '27,5%' },
+];
+
+const DEP_MENSAL = 189.59;
+
+function fmtMoeda(v) { return 'R$ ' + v.toLocaleString('pt-BR', { minimumFractionDigits:2, maximumFractionDigits:2 }); }
+function fmtPct(v) { return (v*100).toFixed(2).replace('.',',') + '%'; }
+
+function showErro(msg) {
+  document.getElementById('erro').textContent = msg;
+  document.getElementById('erro').classList.add('visible');
+  document.getElementById('resultado').classList.remove('visible');
+}
+function hideErro() { document.getElementById('erro').classList.remove('visible'); }
+
+function getFaixa(base) {
+  for (const f of faixas2025) {
+    if (base <= f.limite) return f;
+  }
+  return faixas2025[faixas2025.length-1];
+}
+
+function calcIR(base) {
+  if (base <= 0) return 0;
+  const f = getFaixa(base);
+  return Math.max(0, base * f.aliq - f.pd);
+}
+
+function calcular() {
+  hideErro();
+  const rendimento = parseFloat(document.getElementById('rendimento').value);
+  if (!rendimento || rendimento <= 0) return showErro('Informe o rendimento bruto mensal.');
+
+  const inss = parseFloat(document.getElementById('inss').value) || 0;
+  const dependentes = parseInt(document.getElementById('dependentes').value) || 0;
+  const pensao = parseFloat(document.getElementById('pensao').value) || 0;
+  const outrasDeducoes = parseFloat(document.getElementById('outrasDeducoes').value) || 0;
+  const tipo = document.getElementById('tipocalculo').value;
+
+  const deducaoDep = dependentes * DEP_MENSAL;
+  const totalDeducoes = inss + deducaoDep + pensao + outrasDeducoes;
+  const base = Math.max(0, rendimento - totalDeducoes);
+  const faixa = getFaixa(base);
+  const ir = calcIR(base);
+  const aliqEfetiva = rendimento > 0 ? ir / rendimento : 0;
+  const liquido = rendimento - inss - ir;
+
+  const nomeTipos = { mensal:'Mensal (Fonte Pagadora)', anual:'Ajuste Anual', carneleao:'Carnê-leão (Autônomo)' };
+  document.getElementById('res-titulo').textContent = `IRPF — ${nomeTipos[tipo]}`;
+  document.getElementById('res-ir').textContent = ir > 0 ? fmtMoeda(ir) : 'ISENTO';
+  document.getElementById('res-sub').textContent = ir > 0
+    ? `Alíquota ${faixa.nome} | Base: ${fmtMoeda(base)} | Efetiva: ${fmtPct(aliqEfetiva)}`
+    : `Rendimento abaixo do limite de isenção (R$ 2.259,20)`;
+  document.getElementById('res-base').textContent = fmtMoeda(base);
+  document.getElementById('res-aliq').textContent = ir > 0 ? fmtPct(aliqEfetiva) : 'Isento';
+  document.getElementById('res-deducoes').textContent = fmtMoeda(totalDeducoes);
+  document.getElementById('res-liquido').textContent = fmtMoeda(liquido);
+
+  // Faixas progressivas visual
+  const faixasDiv = document.getElementById('faixas-ir');
+  faixasDiv.innerHTML = '';
+  const limites = [0, 2259.20, 2826.65, 3751.05, 4664.68];
+  const cores = ['#00ff00','#006060','#008080','#005a5a','#004a4a'];
+  faixas2025.forEach((f, i) => {
+    const limInf = limites[i] || 0;
+    const limSup = f.limite === Infinity ? '→ ∞' : `R$ ${f.limite.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+    const isAtiva = base > limInf && (f.limite === Infinity || base <= f.limite);
+    const contrib = base > limInf ? calcIR(Math.min(base, f.limite === Infinity ? base : f.limite)) - calcIR(limInf) : 0;
+
+    const div = document.createElement('div');
+    div.className = `faixa-ir${isAtiva?' ativa':''}${f.aliq===0&&base<=f.limite?' isento':''}`;
+    div.innerHTML = `
+      <div class="fi-aliq">${f.nome}</div>
+      <div class="fi-info">
+        <div class="fi-faixa">De ${fmtMoeda(limInf)} até ${limSup}</div>
+        <div class="fi-deducao">Parcela a deduzir: ${fmtMoeda(f.pd)}</div>
+      </div>
+      <div class="fi-ir">${contrib > 0 ? fmtMoeda(contrib) : base <= limInf ? '—' : 'Isento'}</div>`;
+    faixasDiv.appendChild(div);
+  });
+
+  // Barra visual
+  const barra = document.getElementById('barra-bg');
+  barra.innerHTML = '';
+  const segs = [
+    { val: Math.min(rendimento, 2259.20), cls: 'barra-isento', label: 'Isento' },
+    { val: Math.min(Math.max(0, rendimento - 2259.20), 567.45), cls: 'barra-75', label: '7,5%' },
+    { val: Math.min(Math.max(0, rendimento - 2826.65), 924.40), cls: 'barra-15', label: '15%' },
+    { val: Math.min(Math.max(0, rendimento - 3751.05), 913.63), cls: 'barra-225', label: '22,5%' },
+    { val: Math.max(0, rendimento - 4664.68), cls: 'barra-275', label: '27,5%' },
+  ];
+  segs.filter(s=>s.val>0).forEach(s => {
+    const pct = (s.val / rendimento * 100).toFixed(1);
+    const div = document.createElement('div');
+    div.className = `barra-seg ${s.cls}`;
+    div.style.width = pct + '%';
+    div.textContent = parseFloat(pct) > 8 ? s.label : '';
+    barra.appendChild(div);
+  });
+
+  // Composição
+  const lista = document.getElementById('comp-lista');
+  lista.innerHTML = '';
+  const addItem = (nome, valor, cls='', tot=false) => {
+    const div = document.createElement('div');
+    div.className = `comp-item${cls?' '+cls:''}${tot?' total':''}`;
+    div.innerHTML = `<span class="ci-nome">${nome}</span><span class="ci-valor">${typeof valor==='string'?valor:fmtMoeda(valor)}</span>`;
+    lista.appendChild(div);
+  };
+
+  addItem('Rendimento bruto', rendimento);
+  if (inss > 0) addItem('(−) INSS', inss, 'vermelho');
+  if (deducaoDep > 0) addItem(`(−) Dependentes (${dependentes} × R$ 189,59)`, deducaoDep, 'vermelho');
+  if (pensao > 0) addItem('(−) Pensão alimentícia', pensao, 'vermelho');
+  if (outrasDeducoes > 0) addItem('(−) Outras deduções', outrasDeducoes, 'vermelho');
+  addItem(`Base de cálculo (alíquota ${faixa.nome})`, base, 'teal');
+  addItem(`IRPF (${faixa.nome} × ${fmtMoeda(base)} − ${fmtMoeda(faixa.pd)})`, ir, ir > 0 ? 'vermelho' : '');
+  addItem('RENDIMENTO LÍQUIDO', liquido, '', true);
+
+  document.getElementById('resultado').classList.add('visible');
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') { const f = document.activeElement; if (f && (f.tagName==='INPUT'||f.tagName==='SELECT')) calcular(); }
+});
+</script>
+</body>
+</html>
